@@ -1,0 +1,53 @@
+name: zap-ntsc-staging
+
+on:
+  workflow_dispatch:
+
+jobs:
+  scan:
+    runs-on: ubuntu-latest
+    timeout-minutes: 180        # hard GitHub-level kill after 3 hrs
+    steps:
+      - name: Run ZAP Scan on NTSC Staging
+        uses: zaproxy/action-full-scan@v0.12.0
+        with:
+          target: 'https://www.quizrr.in'
+          cmd_options: >-
+            -m 20
+            -T 150
+            -z "
+              -config network.rateLimit.enabled=true
+              -config network.rateLimit.requestsPerSecond=8
+              -config spider.maxDepth=20
+              -config spider.threadCount=4
+              -config spider.maxChildren=200
+              -config spider.maxDuration=60
+              -config spider.maxScans=0
+              -config spider.handleParameters=USE_ALL
+              -config spider.parseComments=true
+              -config spider.parseRobotsTxt=true
+              -config spider.parseSitemapXml=true
+              -config spider.processForm=true
+              -config scanner.threadPerHost=3
+              -config scanner.delayInMs=200
+              -config scanner.handleAntiCSRFTokens=true
+              -config scanner.injectPluginIdInHeader=true
+              -config connection.timeoutInSecs=20
+              -config ascan.maxRuleDurationInMins=10
+              -config ascan.maxScanDurationInMins=100
+              -config ajaxSpider.enabled=true
+              -config ajaxSpider.maxDuration=15
+              -config ajaxSpider.maxCrawlDepth=10
+              -config ajaxSpider.numberOfBrowsers=2
+              -config core.defaultUserAgent=Mozilla/5.0
+            "
+
+      - name: Upload ZAP Report
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: zap-ntsc-staging-report
+          path: |
+            report_html.html
+            report_json.json
+            report_md.md
